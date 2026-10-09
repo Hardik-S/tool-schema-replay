@@ -31,7 +31,7 @@ def test_text_output_is_deterministic_and_reports_breakage(capsys):
 
 def test_all_compatible_exit_code_is_zero(tmp_path, capsys):
     old = {"tools": [{"name": "lookup", "inputSchema": {"$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object", "properties": {"key": {"type": "string"}}, "required": ["key"]}}]}
-    calls = {"calls": [{"id": "c1", "tool": "lookup", "arguments": {"key": "synthetic"}}]}
+    calls = {"version": 1, "calls": [{"id": "c1", "tool": "lookup", "arguments": {"key": "synthetic"}}]}
     old_file = tmp_path / "old.json"
     new_file = tmp_path / "new.json"
     calls_file = tmp_path / "calls.json"
@@ -48,6 +48,6 @@ def test_invalid_input_exit_code_is_two(tmp_path, capsys):
     calls = tmp_path / "calls.json"
     invalid.write_text("{", encoding="utf-8")
     valid.write_text('{"tools": []}', encoding="utf-8")
-    calls.write_text('{"calls": []}', encoding="utf-8")
+    calls.write_text('{"version": 1, "calls": []}', encoding="utf-8")
     assert cli.main([str(invalid), str(valid), str(calls)]) == 2
     capsys.readouterr()

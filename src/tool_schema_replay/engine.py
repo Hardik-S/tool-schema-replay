@@ -94,7 +94,10 @@ def evaluate(old_snapshot: Any, new_snapshot: Any, calls_document: Any) -> dict[
     new_tools = _tools(new_snapshot, "new_snapshot")
 
     calls_obj = _object(calls_document, "calls_document")
-    _keys(calls_obj, {"calls"}, set(), "calls_document")
+    _keys(calls_obj, {"version", "calls"}, set(), "calls_document")
+    version = calls_obj["version"]
+    if type(version) is not int or version != 1:
+        raise InputError("calls_document.version must be the integer 1")
     raw_calls = calls_obj["calls"]
     if not isinstance(raw_calls, list):
         raise InputError("calls_document.calls must be an array")
