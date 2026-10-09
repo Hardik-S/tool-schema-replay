@@ -1,0 +1,6 @@
+{
+  "calls": [
+    {"id": "call-001", "tool": "lookup_customer", "arguments": {"customer_id": "C-100"}},
+    {"id": "call-002", "tool": "create_ticket", "arguments": {"title": "Synthetic example"}}
+  ]
+}

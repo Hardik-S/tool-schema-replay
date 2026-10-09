@@ -1,0 +1,9 @@
+"""Make the src-layout package importable without an editable install."""
+
+import sys
+from pathlib import Path
+
+
+SOURCE = Path(__file__).resolve().parents[1] / "src"
+if str(SOURCE) not in sys.path:
+    sys.path.insert(0, str(SOURCE))

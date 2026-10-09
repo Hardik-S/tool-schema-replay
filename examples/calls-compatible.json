@@ -1,0 +1,5 @@
+{
+  "calls": [
+    {"id": "call-001", "tool": "lookup_customer", "arguments": {"customer_id": "C-100"}}
+  ]
+}

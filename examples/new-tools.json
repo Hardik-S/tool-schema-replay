@@ -1,0 +1,30 @@
+{
+  "tools": [
+    {
+      "name": "lookup_customer",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "customer_id": {"type": "string"},
+          "region": {"type": "string"}
+        },
+        "required": ["customer_id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_ticket",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "title": {"type": "string"},
+          "priority": {"type": "integer"}
+        },
+        "required": ["title", "priority"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

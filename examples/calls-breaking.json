@@ -1,0 +1,5 @@
+{
+  "calls": [
+    {"id": "call-002", "tool": "create_ticket", "arguments": {"title": "Synthetic example"}}
+  ]
+}
