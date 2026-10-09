@@ -14,6 +14,33 @@ class InputError(ValueError):
     """Raised when snapshots or captured calls are malformed or invalid."""
 
 
+# Draft 2020-12 keywords whose values contain schemas. Walking only these
+# positions avoids mistaking examples, defaults, or literal instance data for
+# schema declarations.
+_SCHEMA_MAP_KEYWORDS = {"$defs", "properties", "patternProperties", "dependentSchemas"}
+_SCHEMA_KEYWORDS = {
+    "additionalProperties", "unevaluatedProperties", "propertyNames", "contains",
+    "items", "unevaluatedItems", "not", "if", "then", "else", "contentSchema",
+}
+_SCHEMA_ARRAY_KEYWORDS = {"allOf", "anyOf", "oneOf", "prefixItems"}
+
+
+def _subschemas(schema: Mapping[str, Any]) -> list[Any]:
+    children: list[Any] = []
+    for keyword in _SCHEMA_MAP_KEYWORDS:
+        value = schema.get(keyword)
+        if isinstance(value, Mapping):
+            children.extend(value.values())
+    for keyword in _SCHEMA_KEYWORDS:
+        if keyword in schema:
+            children.append(schema[keyword])
+    for keyword in _SCHEMA_ARRAY_KEYWORDS:
+        value = schema.get(keyword)
+        if isinstance(value, list):
+            children.extend(value)
+    return children
+
+
 def _object(value: Any, where: str) -> Mapping[str, Any]:
     if not isinstance(value, Mapping):
         raise InputError(f"{where} must be an object")
@@ -49,17 +76,16 @@ def _schema_validator(schema: Any, where: str) -> Draft202012Validator:
     while pending:
         node = pending.pop()
         if isinstance(node, Mapping):
-            ref = node.get("$ref")
-            if ref is not None:
-                if not isinstance(ref, str) or not ref.startswith("#"):
-                    raise InputError(f"{where} uses a non-local $ref: {ref!r}")
-                try:
-                    registry.resolver().lookup(ref)
-                except Exception as exc:
-                    raise InputError(f"{where} has an unresolved $ref {ref!r}") from exc
-            pending.extend(node.values())
-        elif isinstance(node, (list, tuple)):
-            pending.extend(node)
+            for keyword in ("$ref", "$dynamicRef"):
+                ref = node.get(keyword)
+                if ref is not None:
+                    if not isinstance(ref, str) or not ref.startswith("#"):
+                        raise InputError(f"{where} uses a non-local {keyword}: {ref!r}")
+                    try:
+                        registry.resolver().lookup(ref)
+                    except Exception as exc:
+                        raise InputError(f"{where} has an unresolved {keyword} {ref!r}") from exc
+            pending.extend(_subschemas(node))
 
     return Draft202012Validator(dict(schema), registry=registry)
 

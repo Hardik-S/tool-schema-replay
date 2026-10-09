@@ -109,6 +109,39 @@ def test_local_reference_resolves_without_external_access():
     assert result["summary"]["breaking"] == 0
 
 
+def test_ref_inside_const_instance_data_is_not_resolved_as_a_schema_reference():
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {"literal": {"const": {"$ref": "https://example.invalid/data"}}},
+        "required": ["literal"],
+    }
+    result = engine.evaluate(
+        snapshot(tool("x", schema)), snapshot(tool("x", schema)),
+        {"version": 1, "calls": [call("c1", "x", {"literal": {"$ref": "https://example.invalid/data"}})]},
+    )
+    assert result["summary"]["breaking"] == 0
+
+
+def test_remote_dynamic_reference_in_unused_conditional_is_rejected():
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "if": {"properties": {"enabled": {"const": True}}},
+        "then": {"$dynamicRef": "https://example.invalid/schema"},
+    }
+    with pytest.raises(engine.InputError, match="non-local \\$dynamicRef"):
+        engine.evaluate(snapshot(tool("x", schema)), snapshot(), {"version": 1, "calls": []})
+
+
+def test_active_remote_dynamic_reference_is_rejected_as_input_error():
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$dynamicRef": "https://example.invalid/schema",
+    }
+    with pytest.raises(engine.InputError, match="non-local \\$dynamicRef"):
+        engine.evaluate(snapshot(tool("x", schema)), snapshot(), {"version": 1, "calls": []})
+
+
 @pytest.mark.parametrize("version", [None, 1.0, True, 2])
 def test_calls_document_requires_exact_integer_version_one(version):
     with pytest.raises(engine.InputError):
